@@ -85,6 +85,8 @@
     <option value="stacked">Stacked sums (vertical)</option>
     <option value="vowel">Missing vowels with pictures</option>
     <option value="match">Match pictures to words</option>
+    <option value="pronoun">He, she, it or they (pronouns)</option>
+    <option value="scramble">Spelling test: unscramble the letters</option>
     <option value="placement">Number line: where does it go?</option>
   </select>
 
@@ -354,12 +356,100 @@ THEME_LEVELS.push({code:'T'+(THEME_LEVELS.length+1),name:'First words: everythin
 const MATCH_LEVELS=THEME_LEVELS.concat(VOWEL_LEVELS).map(l=>({...l,
   why:l.code==='V1'?'Reading whole words and linking them to meaning. Same phonics order as the vowel sheets, so a child can match words they have just learned to spell.':l.why,
   pool:l.pool.map(w=>({...w,id:'m:'+w.word}))}));
-const isWords=t=>t==='vowel'||t==='match';
+const isWords=t=>t==='vowel'||t==='match'||t==='scramble';
+
+/* ============================================================
+   Pronouns: he / she / it / they
+   ============================================================ */
+const PEOPLE={
+  he:[['👦',['is a boy.','is Tom.','is my brother.','is his friend.','is happy.','is Ravi.','is five.']],
+      ['👨',['is my dad.','is a man.','is Mr Khan.','is tall.']],
+      ['👴',['is my grandpa.','is old.']],['🤴',['is a king.','is a prince.']],
+      ['🧔',['is my uncle.']],['🎅',['is Santa.']]],
+  she:[['👧',['is a girl.','is Molly.','is my sister.','is her friend.','is Priya.','is six.']],
+       ['👩',['is my mum.','is a woman.','is Mrs Lee.','is kind.']],
+       ['👵',['is my grandma.','is old.']],['👸',['is a queen.','is a princess.']],
+       ['💃',['is dancing.']],['🧕',['is my aunt.']]],
+};
+const GROUPS=[['👫','are friends.'],['👪','are a family.'],['👭','are sisters.'],['👬','are brothers.']];
+const NOT_IT=new Set('baby girl boy grandma grandpa queen king fairy elf man woman eye ten six tv'.split(' '));
+const THE_WORDS=new Set(['sun','moon']);
+const OWNED=new Set(['play','clothes','home']);
+const MASS=new Set('milk bread rice honey cheese butter salt juice popcorn chocolate candy snow rain wind corn broccoli garlic chilli soap money'.split(' '));
+const PLURAL_ONLY=new Set('noodles fries pancakes jeans shorts glasses scissors gloves'.split(' '));
+const NO_PLURAL=new Set('dice sheep fish deer shrimp mouse tooth foot sun moon earth desert island volcano storm wind road rainbow planet tv hospital school castle house mountain wave'.split(' '));
+const THEY_THEMES=new Set(['animals','food','home','play','clothes','go']);
+const THEY_NATURE=new Set('flower tulip sunflower cloud rock tree leaf star shell cactus'.split(' '));
+function plural(w){
+  const irr={leaf:'leaves',wolf:'wolves',potato:'potatoes',tomato:'tomatoes',mango:'mangoes',knife:'knives'};
+  if(irr[w])return irr[w];
+  if(/[^aeiou]y$/.test(w))return w.slice(0,-1)+'ies';
+  if(/(s|x|z|ch|sh)$/.test(w))return w+'es';
+  return w+'s';
+}
+const article=w=>(/^[aeio]/.test(w)||/^u(?!ni)/.test(w))?'an':'a';
+const PRON_POOLS={he:[],she:[],it:[],they:[]};
+(function(){
+  for(const g of ['he','she'])PEOPLE[g].forEach(([pic,preds],i)=>preds.forEach((r,j)=>PRON_POOLS[g].push({id:`pr:${g}${i}.${j}`,pr:g,pic,n:1,rest:r})));
+  const owners=['my','his','her','my'];
+  WORDS.forEach((w,i)=>{
+    if(!w.theme||w.theme==='actions'||NOT_IT.has(w.word))return;
+    if(PLURAL_ONLY.has(w.word)){PRON_POOLS.they.push({id:'pr:t-'+w.word,pr:'they',pic:w.emoji,n:1,rest:`are my ${w.word}.`});return;}
+    if(!MASS.has(w.word)){
+      const r=THE_WORDS.has(w.word)?`is the ${w.word}.`:(OWNED.has(w.theme)&&i%3===0)?`is ${owners[i%4]} ${w.word}.`:`is ${article(w.word)} ${w.word}.`;
+      PRON_POOLS.it.push({id:'pr:i-'+w.word,pr:'it',pic:w.emoji,n:1,rest:r});
+    }
+    const theyOk=(THEY_THEMES.has(w.theme)||THEY_NATURE.has(w.word))&&!MASS.has(w.word)&&!NO_PLURAL.has(w.word)&&w.tag!=='tricky';
+    if(theyOk)PRON_POOLS.they.push({id:'pr:t-'+w.word,pr:'they',pic:w.emoji,n:3,rest:(OWNED.has(w.theme)&&i%4===1)?`are my ${plural(w.word)}.`:`are ${plural(w.word)}.`});
+  });
+  GROUPS.forEach(([pic,r],i)=>PRON_POOLS.they.push({id:'pr:g'+i,pr:'they',pic,n:1,rest:r}));
+})();
+const PRON_LEVELS=[
+  {code:'G1',name:'He or she',words:['he','she'],why:'Start with people: is it a boy/man or a girl/woman? Say the sentence aloud with each word and listen for the one that sounds right.'},
+  {code:'G2',name:'He, she or it',words:['he','she','it'],why:'"It" is for things and animals. Each word comes up about equally often.'},
+  {code:'G3',name:'It or they (one or many)',words:['it','they'],why:'One thing is "it is", more than one is "they are". The child counts the pictures and checks the verb.'},
+  {code:'G4',name:'He, she, it or they',words:['he','she','it','they'],why:'All four together: a mixed review once each pair is secure.'},
+];
+PRON_LEVELS.forEach(l=>{l.range=0;l.parts=l.words.map(w=>PRON_POOLS[w]);l.pool=l.parts.flat();});
+
+/* ============================================================
+   Unscramble spelling test: levels by word length
+   ============================================================ */
+const sw=(min,max)=>WORDS.filter(w=>w.theme&&w.word.length>=min&&w.word.length<=max).map(w=>({...w,id:'sc:'+w.word}));
+const SCRAMBLE_LEVELS=[
+  {code:'U1',name:'3-letter words (cat, sun)',pool:sw(3,3),why:'Short words first: only six ways to arrange three letters, so the child can try them out loud.'},
+  {code:'U2',name:'4-letter words (frog, cake)',pool:sw(4,4),why:'Four letters. Tip: find the first sound from the picture, then the rest.'},
+  {code:'U3',name:'5-letter words (snake, train)',pool:sw(5,5),why:'Five letters, like the original sheet.'},
+  {code:'U4',name:'Mixed 3 to 5 letters',pool:sw(3,5),why:'A mixed test of short words.'},
+  {code:'U5',name:'6 and 7 letters (rabbit, rainbow)',pool:sw(6,7),why:'Longer words: look for chunks like -ow, -it or -er.'},
+  {code:'U6',name:'Challenge: 8+ letters',pool:sw(8,20),why:'Long words such as elephant and butterfly, for confident spellers.'},
+];
+SCRAMBLE_LEVELS.forEach(l=>{l.range=0;});
+/* Jumble a word so it never matches the word itself or spells another real word (dog → god),
+   and for 4+ letters moves at least half of the letters and never keeps the first letter. */
+const REAL_WORDS=new Set(WORDS.map(w=>w.word).concat(('god art tar rat top pot opt now won own was saw raw war ten net pin nip tip pit '+
+  'pots stop spot post tops opts arm ram mar ate eat tea ear are era act pan nap tab bat but tub sub bus nut tun gum mug pal lap '+
+  'pat tap apt ape pea pie tie gab bag owl low flow wolf evil live vile reap pare pear rape tops opts dab bad sap spa pas nod don '+
+  'mat tam pea ate tea ape pit tip lip pal nip god dog ton not opt was asp ran tin nit ink kin keen knee team meat mate tame').split(' ')));
+function scrambleWord(word,rng){
+  const L=[...word]; if(new Set(L).size<2)return word;
+  let best=null,bestMoved=-1;
+  for(let t=0;t<60;t++){
+    const c=shuffle(L,rng), moved=c.filter((ch,i)=>ch!==L[i]).length, str=c.join('');
+    if(str===word||REAL_WORDS.has(str))continue;
+    if(moved>bestMoved){best=str;bestMoved=moved;}
+    if(moved>=Math.ceil(L.length/2)&&!(L.length>3&&c[0]===L[0]))return str;
+  }
+  return best||L.slice().reverse().join('');
+}
+
 const TYPES={
   numberline:{levels:MATH_LEVELS},
   stacked:{levels:MATH_LEVELS},
   vowel:{levels:VOWEL_LEVELS},
   match:{levels:MATCH_LEVELS},
+  pronoun:{levels:PRON_LEVELS},
+  scramble:{levels:SCRAMBLE_LEVELS},
   placement:{levels:PLACE_LEVELS},
 };
 const MODE_WHY={
@@ -412,9 +502,9 @@ function reviewPool(type,level){
   const levels=TYPES[type].levels, idx=levels.indexOf(level), ids=new Set(level.pool.map(f=>f.id)), seen=new Set(), out=[];
   for(let i=0;i<idx;i++){const l=levels[i];
     if(l.group!==level.group)continue;
-    if(!isWords(type)&&type!=='placement'&&l.range>level.range)continue;
+    if((type==='numberline'||type==='stacked')&&l.range>level.range)continue;
     if(type==='placement')continue;
-    for(const f of l.pool){if(!isWords(type)&&!nz(f))continue; if(!ids.has(f.id)&&!seen.has(f.id)){seen.add(f.id);out.push(f);}}}
+    for(const f of l.pool){if((type==='numberline'||type==='stacked')&&!nz(f))continue; if(!ids.has(f.id)&&!seen.has(f.id)){seen.add(f.id);out.push(f);}}}
   REVIEW_CACHE.set(ck,out); return out;
 }
 function focusedItems(type,level,n,rng){
@@ -422,6 +512,13 @@ function focusedItems(type,level,n,rng){
     const out=[];
     while(out.length<n)out.push(...drawFromPool(level.families,1,rng)[0]);
     return out.slice(0,n);
+  }
+  if(level.parts){                     // equal share for each answer word, each part dealt from its own deck
+    const k=level.parts.length, out=[], off=Math.floor(rng()*k);   // which words get the spare slots rotates
+    level.parts.forEach((pool,i)=>out.push(...drawFromPool(pool,Math.floor(n/k)+(((i-off+k)%k)<n%k?1:0),rng)));
+    let o=shuffle(out,rng);
+    for(let t=0;t<20;t++){let bad=false;for(let i=1;i<o.length;i++)if(o[i].pr===o[i-1].pr&&o[i+1]&&o[i+1].pr!==o[i].pr){[o[i],o[i+1]]=[o[i+1],o[i]];bad=true;}if(!bad)break;}
+    return o;
   }
   if(isWords(type)&&level.pool.length<n){
     const extra=drawFromPool(reviewPool(type,level),n-level.pool.length,rng);
@@ -433,7 +530,7 @@ function mixedItems(type,level,n,share,rng){
   const rev=reviewPool(type,level);
   if(!rev.length||share>=1)return focusedItems(type,level,n,rng);
   const nNew=Math.max(1,Math.round(n*share));
-  const fresh=isWords(type)?drawFromPool(level.pool,Math.min(nNew,level.pool.length),rng):drawFromPool(level.pool,nNew,rng);
+  const fresh=level.parts?focusedItems(type,level,nNew,rng):isWords(type)?drawFromPool(level.pool,Math.min(nNew,level.pool.length),rng):drawFromPool(level.pool,nNew,rng);
   const old=drawFromPool(rev,n-fresh.length,rng);
   return interleave(fresh,old);
 }
@@ -475,9 +572,12 @@ function itemsPerSheet(s){
   if(s.type==='stacked')return o.rows*o.cols;
   if(s.type==='vowel')return o.rows*2;
   if(s.type==='match')return o.rows;
+  if(s.type==='pronoun')return o.rows;
+  if(s.type==='scramble')return o.rows;
   return o.rows;
 }
 function itemText(it){
+  if(it.pr)return '___ '+it.rest;
   if(it.word)return it.word;
   if(it.N)return `${it.t} (0–${it.N})`;
   return `${it.a} ${it.op==='-'?MINUS:'+'} ${it.b}`;
@@ -491,6 +591,7 @@ function buildSheetsInner(s){
   const n=itemsPerSheet(s), sheets=[];
   const dress=items=>items.map(it=>it.word?{...it,blanks:blanksFor(it.word,s.opts.blank||'auto',level.code,it.tag)}:it);
   const finish=(sheet,rng)=>{
+    if(s.type==='scramble'){sheet.items=sheet.items.map(it=>({...it,jumble:scrambleWord(it.word,rng)}));return sheet;}
     if(s.type!=='match')return sheet;
     const seen=new Set(), u=[];
     for(const it of sheet.items)if(!seen.has(it.id)){seen.add(it.id);u.push(it);}
@@ -547,6 +648,8 @@ function defaultTitle(s,level){
     return op==='+'?'Stack and Add':op==='-'?'Stack and Subtract':'Add and Subtract';}
   if(s.type==='vowel')return 'Finish the Words';
   if(s.type==='match')return 'Match the Picture to the Word';
+  if(s.type==='scramble')return 'Spelling Test';
+  if(s.type==='pronoun'){const w=level.words.map(x=>x[0].toUpperCase()+x.slice(1));return w.slice(0,-1).join(', ')+' or '+w[w.length-1]+'?';}
   return 'Where Does It Go?';
 }
 function defaultInstr(s,level){
@@ -557,6 +660,8 @@ function defaultInstr(s,level){
     if(m==='last-letter')return 'Say the word. Write the last letter.';
     return 'Say the word. Write the missing vowel.';}
   if(s.type==='match')return 'Read each word. Draw a line from the picture to its word.';
+  if(s.type==='scramble')return 'Unscramble the letters and write the word.';
+  if(s.type==='pronoun')return 'Look at the picture. Write '+level.words.map(w=>'"'+w+'"').join(', ').replace(/, ([^,]*)$/,' or $1')+' in each gap.';
   return 'Draw a line to show where each number goes.';
 }
 const MARGIN=14;
@@ -724,7 +829,59 @@ function layoutMatch(ctx,s,sheet,W,H,isKey){
     sheet.order.forEach((src,j)=>{ctx.beginPath();ctx.moveTo(dotL+1.5,rowY(src));ctx.lineTo(dotR-1.5,rowY(j));ctx.stroke();});}
   drawFooter(ctx,s,sheet,W,H,isKey);
 }
-const LAYOUTS={numberline:layoutNumberLine,stacked:layoutStacked,vowel:layoutVowel,match:layoutMatch,placement:layoutPlacement};
+/* ---------- Layout F: pronouns ---------- */
+function layoutPronoun(ctx,s,sheet,W,H,isKey){
+  let y0=drawHeader(ctx,s,sheet,W,H,isKey); const o=s.opts, words=sheet.level.words;
+  if(o.bank){const gap=8, sz=6.5, ws=words.map(w=>measure(ctx,w,sz,{fam:TITLE,weight:600}));
+    const tot=ws.reduce((a,b)=>a+b,0)+gap*(words.length-1)+16, bx=(W-tot)/2;
+    rect(ctx,bx,y0-4,tot,12,0.4,'#333',4); let x=bx+8;
+    words.forEach((w,i)=>{txt(ctx,w,x,y0+4.2,{size:sz,fam:TITLE,weight:600});x+=ws[i]+gap;});
+    y0+=15;}
+  const items=sheet.items, n=items.length, bottom=H-16, rowH=(bottom-y0)/n;
+  const pic=Math.min(rowH*0.82,22), size=Math.min(rowH*0.44,9.5), px=MARGIN+4, blankX=px+pic+16, blankW=size*3.6;
+  items.forEach((it,i)=>{
+    const cy=y0+rowH*(i+0.5), base=cy+size*0.36;
+    ctx.save(); if(o.bw)ctx.filter='grayscale(1)';
+    font(ctx,(it.n>1?pic*0.55:pic*0.82),{fam:EMOJI});ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';
+    if(it.n>1){const q=pic*0.3;[[-q,-q*0.6],[q,-q*0.6],[0,q*0.75]].forEach(([dx,dy])=>ctx.fillText(it.pic,px+pic/2+dx,cy+dy));}
+    else ctx.fillText(it.pic,px+pic/2,cy+pic*0.04);
+    ctx.restore();
+    ln(ctx,blankX,base+1,blankX+blankW,base+1,0.4);
+    const ans=it.pr[0].toUpperCase()+it.pr.slice(1);
+    if(isKey||(o.example&&i===0))txt(ctx,ans,blankX+blankW/2,base,{size,align:'center',color:isKey?KEY_INK:'#7a4fbf',weight:700});
+    txt(ctx,it.rest,blankX+blankW+2.5,base,{size});
+  });
+  drawFooter(ctx,s,sheet,W,H,isKey);
+}
+/* ---------- Layout G: unscramble spelling test ---------- */
+const ROW_COLS=['#e86a8a','#f0a030','#e3c021','#5cb85c','#3fb7c9','#8e6bd1','#e86a8a','#f0a030','#e3c021','#5cb85c','#3fb7c9','#8e6bd1'];
+function layoutScramble(ctx,s,sheet,W,H,isKey){
+  const y0=drawHeader(ctx,s,sheet,W,H,isKey)+1, o=s.opts, items=sheet.items, n=items.length, bottom=H-16, rowH=(bottom-y0)/n;
+  const x0=MARGIN, x1=W-MARGIN, numW=11, picW=o.pics?Math.min(rowH*1.15,24):0, jumW=(x1-x0-numW-picW)*0.42, ansX=x0+numW+picW+jumW;
+  const upper=o.case==='upper', size=Math.min(rowH*0.36,7.5);
+  items.forEach((it,i)=>{
+    const top=y0+i*rowH, cy=top+rowH/2, col=o.colour?ROW_COLS[i%ROW_COLS.length]:'#999';
+    rect(ctx,x0,top+0.6,x1-x0,rowH-1.2,0.45,col,1.5);
+    if(o.colour){ctx.fillStyle=col;ctx.beginPath();ctx.arc(x0+numW/2+0.5,cy,Math.min(3.6,rowH*0.3),0,Math.PI*2);ctx.fill();
+      txt(ctx,String(i+1),x0+numW/2+0.5,cy+1.25,{size:3.6,align:'center',color:'#fff',weight:700});}
+    else txt(ctx,(i+1)+'.',x0+numW/2+0.5,cy+1.25,{size:3.8,align:'center',weight:700});
+    if(o.pics){ln(ctx,x0+numW,top+0.6,x0+numW,top+rowH-0.6,0.3,col);
+      ctx.save();if(o.bw)ctx.filter='grayscale(1)';font(ctx,Math.min(rowH*0.68,picW*0.7),{fam:EMOJI});ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillStyle='#000';
+      ctx.fillText(it.emoji,x0+numW+picW/2,cy+0.5);ctx.restore();}
+    ln(ctx,x0+numW+picW,top+0.6,x0+numW+picW,top+rowH-0.6,0.3,col); ln(ctx,ansX,top+0.6,ansX,top+rowH-0.6,0.3,col);
+    const jum=(upper?it.jumble.toUpperCase():it.jumble).split('').join(' ');
+    let js=size; while(measure(ctx,jum,js,{weight:700})>jumW-6&&js>3)js-=0.25;
+    txt(ctx,jum,x0+numW+picW+jumW/2,cy+js*0.36,{size:js,align:'center',weight:700});
+    const word=upper?it.word.toUpperCase():it.word, L=word.length, availW=x1-ansX-8;
+    const slot=Math.min(9,availW/L), lw=slot*0.72, sx=ansX+4+(availW-slot*L)/2, base=cy+size*0.5;
+    for(let k=0;k<L;k++){const x=sx+k*slot;
+      if(o.slots==='boxes')rect(ctx,x,base-slot*0.95,lw,slot*1.05,0.3,'#555',0.6); else ln(ctx,x,base+0.6,x+lw,base+0.6,0.4);
+      const show=isKey||(o.first&&k===0);
+      if(show)txt(ctx,word[k],x+lw/2,base-(o.slots==='boxes'?slot*0.2:0.4),{size:Math.min(size,slot*0.85),align:'center',color:isKey?KEY_INK:'#7a4fbf',weight:700});}
+  });
+  drawFooter(ctx,s,sheet,W,H,isKey);
+}
+const LAYOUTS={numberline:layoutNumberLine,stacked:layoutStacked,vowel:layoutVowel,match:layoutMatch,pronoun:layoutPronoun,scramble:layoutScramble,placement:layoutPlacement};
 const PAPER={A4:[210,297],Letter:[215.9,279.4]};
 function renderPage(ctx,s,page,W,H){
   ctx.fillStyle='#fff';ctx.fillRect(0,0,W,H);
@@ -745,6 +902,8 @@ const LAYOUT_DEFAULTS={
   stacked:{style:'plain',rows:5,cols:4},
   vowel:{rows:5,blank:'auto',case:'lower',hint:true,bw:false},
   match:{rows:6,case:'lower',bw:false},
+  pronoun:{rows:9,bank:true,example:true,bw:false},
+  scramble:{rows:10,case:'upper',pics:true,first:false,slots:'lines',colour:true,bw:false},
   placement:{rows:8},
 };
 const STYLE_GRID={plain:[5,4],boxed:[6,5],drill:[6,5]};
@@ -773,6 +932,13 @@ function layoutControls(){
     h+=sel('blank','What to blank',[['auto','Automatic for the level'],['first-vowel','First vowel'],['all-vowels','All vowels'],['first-letter','First letter (beginning sounds)'],['last-letter','Last letter (ending sounds)']]);
     h+=sel('case','Letters',[['lower','lowercase (recommended)'],['upper','UPPERCASE']]);
     h+=chk('hint','Show a e i o u at the top')+chk('bw','Black & white pictures');}
+  if(t==='scramble'){h+=`<div class="row">${num('rows','Words',4,14)}</div>`;
+    h+=sel('case','Letters',[['upper','UPPERCASE (like the original)'],['lower','lowercase']]);
+    h+=sel('slots','Answer spaces',[['lines','One line per letter'],['boxes','One box per letter']]);
+    h+=chk('pics','Show pictures (turn off for a harder test)')+chk('first','Give the first letter as a hint')+chk('colour','Coloured rows')+chk('bw','Black & white pictures');
+    h+=`<p class="hint">The number of spaces always matches the word, and letters are never left in their original order.</p>`;}
+  if(t==='pronoun'){h+=`<div class="row">${num('rows','Sentences',4,12)}</div>`;
+    h+=chk('bank','Show the word box at the top')+chk('example','Fill in the first one as an example')+chk('bw','Black & white pictures');}
   if(t==='match'){h+=`<div class="row">${num('rows','Pairs',3,10)}</div>`;
     h+=sel('case','Letters',[['lower','lowercase (recommended)'],['upper','UPPERCASE']]);
     h+=chk('bw','Black & white pictures');}
