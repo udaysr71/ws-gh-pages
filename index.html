@@ -246,49 +246,94 @@ MATH_LEVELS.forEach(l=>{if(l.families)l.pool=l.families.flat();});
 const WORDS=[
  // short a
  ['cat','🐱','a'],['bat','🦇','a'],['hat','🎩','a'],['rat','🐀','a'],['map','🗺️','a'],['van','🚐','a'],
- ['can','🥫','a'],['bag','👜','a'],['cap','🧢','a'],['pan','🍳','a'],['ram','🐏','a'],['man','👨','a'],
+ ['bag','👜','a'],['cap','🧢','a'],
  // short e
- ['bed','🛏️','e'],['hen','🐔','e'],['net','🥅','e'],['pen','🖊️','e'],['ten','🔟','e'],['web','🕸️','e'],['leg','🦵','e'],['gem','💎','e'],
+ ['bed','🛏️','e'],['pen','🖊️','e'],['ten','🔟','e'],['web','🕸️','e'],['leg','🦵','e'],
  // short i
- ['pig','🐷','i'],['pin','📌','i'],['bin','🗑️','i'],['lip','👄','i'],['kid','🧒','i'],['six','6️⃣','i'],
+ ['pig','🐷','i'],['six','6️⃣','i'],
  // short o
- ['dog','🐶','o'],['log','🪵','o'],['pot','🍲','o'],['box','📦','o'],['fox','🦊','o'],['hog','🐗','o'],['dot','🔴','o'],
+ ['dog','🐶','o'],['box','📦','o'],['fox','🦊','o'],
  // short u
- ['sun','☀️','u'],['bus','🚌','u'],['cup','🥤','u'],['bug','🐛','u'],['mug','☕','u'],['nut','🥜','u'],['tub','🛁','u'],['hut','🛖','u'],
+ ['sun','☀️','u'],['run','🏃','u'],['hug','🫂','u'],['bus','🚌','u'],['cup','🥤','u'],['hut','🛖','u'],
  // short vowels with blends and digraphs
  ['frog','🐸','blend'],['duck','🦆','blend'],['sock','🧦','blend'],['tent','⛺','blend'],['drum','🥁','blend'],['crab','🦀','blend'],
  ['fish','🐟','blend'],['ship','🚢','blend'],['milk','🥛','blend'],['gift','🎁','blend'],['bell','🔔','blend'],['clock','⏰','blend'],
  ['lock','🔒','blend'],['truck','🚚','blend'],['plug','🔌','blend'],['skunk','🦨','blend'],['sled','🛷','blend'],['flag','🚩','blend'],
- ['hand','✋','blend'],['chick','🐤','blend'],
+ ['hand','✋','blend'],['vest','🦺','blend'],['swim','🏊','blend'],['dress','👗','blend'],['clap','👏','blend'],['chick','🐤','blend'],
  // vowel at the start
- ['ant','🐜','start'],['egg','🥚','start'],['ox','🐂','start'],['elf','🧝','start'],['axe','🪓','start'],['up','⬆️','start'],
+ ['ant','🐜','start'],['egg','🥚','start'],['elf','🧝','start'],['axe','🪓','start'],
  ['octopus','🐙','start'],['otter','🦦','start'],['elephant','🐘','start'],['apple','🍎','start'],['umbrella','☂️','start'],
  // magic e
- ['cake','🎂','magic'],['kite','🪁','magic'],['bike','🚲','magic'],['bone','🦴','magic'],['rope','🪢','magic'],['cube','🧊','magic'],
- ['snake','🐍','magic'],['nose','👃','magic'],['rose','🌹','magic'],['dice','🎲','magic'],['cone','🍦','magic'],['plane','✈️','magic'],
+ ['cake','🎂','magic'],['grape','🍇','magic'],['whale','🐋','magic'],['skate','⛸️','magic'],['kite','🪁','magic'],['bike','🚲','magic'],['bone','🦴','magic'],
+ ['snake','🐍','magic'],['nose','👃','magic'],['rose','🌹','magic'],['dice','🎲','magic'],['plane','✈️','magic'],
  // vowel teams
  ['tree','🌳','team'],['bee','🐝','team'],['moon','🌙','team'],['boat','⛵','team'],['goat','🐐','team'],['rain','🌧️','team'],
  ['book','📖','team'],['seal','🦭','team'],['leaf','🍃','team'],['boot','👢','team'],['coat','🧥','team'],['snail','🐌','team'],
- ['train','🚆','team'],['spoon','🥄','team'],['pie','🥧','team'],['tie','👔','team'],['soap','🧼','team'],['sheep','🐑','team'],['seed','🌱','team'],
+ ['train','🚆','team'],['spoon','🥄','team'],['pie','🥧','team'],['tie','👔','team'],['soap','🧼','team'],['sheep','🐑','team'],
  // r-controlled and other
  ['star','⭐','other'],['car','🚗','other'],['fork','🍴','other'],['corn','🌽','other'],['bird','🐦','other'],['shark','🦈','other'],
  ['horse','🐴','other'],['fire','🔥','other'],['boy','👦','other'],['cow','🐄','other'],['owl','🦉','other'],['key','🔑','other'],['ball','⚽','other'],
 ].map(([word,emoji,tag])=>({id:'w:'+word,word,emoji,tag}));
+
+/* ---------- First words for ages 1–7, grouped by theme ----------
+   Phonics pattern is worked out from the spelling. Words marked '!' have tricky spellings
+   (eye, shoe, giraffe): they appear in theme matching only, never in vowel sheets. */
+const THEMES={animals:'Animals',food:'Food',home:'Home & things',body:'Body & people',clothes:'Clothes',
+  go:'Getting around',nature:'Nature & weather',play:'Toys, music & play',actions:'Actions & feelings'};
+const MORE_WORDS={
+ animals:'lion🦁 tiger🐯 bear🐻 panda🐼 monkey🐵 rabbit🐰 mouse🐭 koala🐨 zebra🦓 giraffe🦒! camel🐫 kangaroo🦘 hippo🦛 rhino🦏 deer🦌 wolf🐺! dolphin🐬 penguin🐧 turtle🐢 lizard🦎 crocodile🐊 parrot🦜 peacock🦚 flamingo🦩 swan🦢! eagle🦅 turkey🦃 butterfly🦋 ladybug🐞 spider🕷️ shrimp🦐 lobster🦞 leopard🐆 gorilla🦍 sloth🦥! unicorn🦄 dragon🐉 dinosaur🦕 squirrel🐿️! hedgehog🦔 raccoon🦝 llama🦙 fly🪰 shell🐚',
+ food:'banana🍌 orange🍊! lemon🍋 pear🍐 peach🍑 cherry🍒 strawberry🍓 watermelon🍉 pineapple🍍 mango🥭 kiwi🥝 coconut🥥 tomato🍅 carrot🥕 potato🥔 onion🧅! garlic🧄 broccoli🥦 mushroom🍄 chilli🌶️ cucumber🥒 avocado🥑 bread🍞 rice🍚 pizza🍕 burger🍔 fries🍟 sandwich🥪 taco🌮 noodles🍜 cookie🍪! donut🍩 candy🍬 lollipop🍭 chocolate🍫 honey🍯! cheese🧀 butter🧈 pancakes🥞 waffle🧇 popcorn🍿 juice🧃! salt🧂! cupcake🧁 pretzel🥨 bagel🥯 blueberry🫐',
+ home:'chair🪑 door🚪 window🪟 light💡! toilet🚽! mirror🪞! broom🧹 bucket🪣 basket🧺 scissors✂️! pencil✏️ crayon🖍️! brush🖌️ phone📱 watch⌚! tv📺! radio📻! camera📷 computer💻 candle🕯️ house🏠 school🏫! castle🏰! toothbrush🪥 sponge🧽! magnet🧲 ladder🪜 hammer🔨 saw🪚 balloon🎈 glasses👓 ring💍 crown👑 coin🪙 anchor⚓',
+ body:'eye👁️! ear👂 tooth🦷 tongue👅! foot🦶 heart❤️ baby👶 girl👧 grandma👵 grandpa👴 queen👸! king🤴 fairy🧚 ghost👻! robot🤖 alien👽',
+ clothes:'shirt👕 jeans👖 scarf🧣 gloves🧤! shoe👟! swimsuit🩱 shorts🩳 purse👛 backpack🎒 ribbon🎀',
+ go:'tractor🚜 rocket🚀 helicopter🚁 ambulance🚑 scooter🛴 motorbike🏍️ canoe🛶 road🛣️ skateboard🛹 hospital🏥',
+ nature:'cloud☁️ snow❄️ snowman☃️ rainbow🌈 storm⛈️ wind🌬️ wave🌊 volcano🌋 mountain⛰️ island🏝️! desert🏜️ flower🌸 sunflower🌻 tulip🌷 cactus🌵 rock🪨 planet🪐',
+ play:'teddy🧸 yoyo🪀! puzzle🧩! game🎮 guitar🎸! piano🎹! trumpet🎺 violin🎻 paint🎨 basketball🏀 tennis🎾 trophy🏆! medal🥇 wand🪄!',
+ actions:'dance💃! sleep😴 cry😢 write✍️',
+};
+const OLD_THEME={animals:'cat bat rat pig dog fox duck frog crab fish skunk chick ant octopus otter elephant snake bee goat seal snail sheep shark horse cow owl bird whale',
+ food:'egg milk apple cake grape pie corn cup',
+ home:'bed box pen map clock lock plug key bell fork spoon soap book bag tent hut axe',
+ body:'leg hand nose bone boy elf', clothes:'hat cap vest dress sock boot coat tie',
+ go:'van bus truck ship plane bike boat train car sled', nature:'sun tree leaf rain moon star rose fire web umbrella',
+ play:'kite drum dice ball gift ten six flag skate', actions:'run hug swim clap'};
+function autoTag(w){
+  const groups=w.match(/[aeiou]+/g)||[], endsE=/[^aeiou]e$/.test(w);
+  const syll=groups.length-(endsE&&groups.length>1?1:0);
+  if(/y/.test(w)||/[aeiou]w/.test(w))return 'other';
+  if(syll>1||/[^aeiou]le$/.test(w))return 'multi';
+  if(/[aeiou]r/.test(w)||/all$/.test(w))return 'other';
+  if(/^[^aeiou]+[aeiou][^aeiou]e$/.test(w))return 'magic';
+  if(groups.length&&groups[0].length>1)return 'team';
+  if('aeiou'.includes(w[0]))return 'start';
+  if(/^[^aeiou][aeiou][^aeiouwy]$/.test(w))return groups[0];
+  return 'blend';
+}
+(function(){
+  const byWord=new Map(WORDS.map(w=>[w.word,w]));
+  for(const [th,list] of Object.entries(OLD_THEME))for(const wd of list.split(' ')){const w=byWord.get(wd);if(w)w.theme=th;}
+  for(const [th,list] of Object.entries(MORE_WORDS))for(const tok of list.split(' ')){
+    const m=tok.match(/^([a-z]+)(.+?)(!|x)?$/u); if(!m||byWord.has(m[1]))continue;
+    const w={id:'w:'+m[1],word:m[1],emoji:m[2],tag:m[3]?'tricky':autoTag(m[1]),theme:th};
+    WORDS.push(w); byWord.set(w.word,w);
+  }
+})();
 const wordsBy=tags=>WORDS.filter(w=>tags.includes(w.tag));
+const shortVowel=w=>'aeiou'.includes(w.tag)?w.tag:(w.tag==='blend'?(w.word.match(/[aeiou]/)||[''])[0]:'');
 const VOWEL_LEVELS=[
-  {code:'V1',name:'Short a (cat, map)',tags:['a'],why:'Systematic phonics teaches one sound at a time. Short a comes first in most phonics programmes.'},
-  {code:'V2',name:'Short i (pig, pin)',tags:['i'],why:'Second short vowel. Earlier words are added if the sheet needs more.'},
-  {code:'V3',name:'Short o (dog, box)',tags:['o'],why:'Third short vowel.'},
-  {code:'V4',name:'Short u (sun, bus)',tags:['u'],why:'Fourth short vowel.'},
-  {code:'V5',name:'Short e (bed, hen)',tags:['e'],why:'Short e is often the hardest to hear, so it comes last.'},
+  {code:'V1',name:'Short a (cat, hat, flag)',sv:'a',why:'Systematic phonics teaches one sound at a time. Short a comes first in most phonics programmes.'},
+  {code:'V2',name:'Short i (pig, fish, milk)',sv:'i',why:'Second short vowel. Earlier words are added if the sheet needs more.'},
+  {code:'V3',name:'Short o (dog, box, frog)',sv:'o',why:'Third short vowel.'},
+  {code:'V4',name:'Short u (sun, bus, duck)',sv:'u',why:'Fourth short vowel.'},
+  {code:'V5',name:'Short e (bed, leg, tent)',sv:'e',why:'Short e is often the hardest to hear, so it comes last.'},
   {code:'V6',name:'Mixed short vowels',tags:['a','e','i','o','u'],why:'Now the child must listen for which vowel it is.'},
   {code:'V7',name:'Short vowels in longer words (frog, duck)',tags:['blend'],why:'Same short vowels, inside words with consonant blends.'},
   {code:'V8',name:'Vowel at the start (ant, egg)',tags:['start'],why:'Listening for the first sound when it is a vowel.'},
   {code:'V9',name:'Magic e (cake, kite)',tags:['magic'],why:'The silent e makes the first vowel say its name.'},
   {code:'V10',name:'Vowel teams (tree, boat)',tags:['team'],why:'Two vowels working together. Both letters are blanked.'},
-  {code:'V11',name:'Big review (all patterns)',tags:['a','e','i','o','u','blend','start','magic','team','other'],why:'A mixed review like the original sheet. Best after the earlier levels.'},
+  {code:'V11',name:'Big review (all patterns)',tags:['a','e','i','o','u','blend','start','magic','team','other','multi'],why:'A mixed review like the original sheet, including longer words like rabbit and pencil. Best after the earlier levels.'},
 ];
-VOWEL_LEVELS.forEach(l=>{l.pool=wordsBy(l.tags);l.range=0;});
+VOWEL_LEVELS.forEach(l=>{l.pool=l.sv?WORDS.filter(w=>shortVowel(w)===l.sv):wordsBy(l.tags);l.range=0;l.group='phonics';});
 
 /* ============================================================
    Placement (number line estimation)
@@ -300,7 +345,13 @@ const PLACE_LEVELS=[
 ];
 PLACE_LEVELS.forEach(l=>{l.pool=[];for(let t=1;t<l.N;t++)l.pool.push({id:`p${l.N}:${t}`,t,N:l.N});});
 
-const MATCH_LEVELS=VOWEL_LEVELS.map(l=>({...l,
+const THEME_WHY={animals:'First words for ages 1–4: say each picture\'s name together, then match. Start with 3–4 pairs.'};
+const THEME_LEVELS=Object.entries(THEMES).map(([k,name],i)=>({code:'T'+(i+1),name:'First words: '+name,group:'theme',range:0,
+  why:THEME_WHY[k]||'Everyday words by topic. For pre-readers, read the words aloud and let the child find the picture.',
+  pool:WORDS.filter(w=>w.theme===k)}));
+THEME_LEVELS.push({code:'T'+(THEME_LEVELS.length+1),name:'First words: everything',group:'theme',range:0,
+  why:'All the picture words mixed together.',pool:WORDS.filter(w=>w.theme)});
+const MATCH_LEVELS=THEME_LEVELS.concat(VOWEL_LEVELS).map(l=>({...l,
   why:l.code==='V1'?'Reading whole words and linking them to meaning. Same phonics order as the vowel sheets, so a child can match words they have just learned to spell.':l.why,
   pool:l.pool.map(w=>({...w,id:'m:'+w.word}))}));
 const isWords=t=>t==='vowel'||t==='match';
@@ -321,15 +372,28 @@ const MODE_WHY={
 /* ============================================================
    Sheet generation
    ============================================================ */
+/* Problems are dealt from a shuffled deck shared by every sheet in the pack, so each item is used
+   once before any item comes back. Within one sheet an item repeats only when the level has fewer
+   items than the sheet has spaces, and then never twice in a row. */
+let DECKS=null, DECK_RNG=null;
+const keyOf=f=>f.id||f.map(x=>x.id).join('|');
 function drawFromPool(pool,n,rng){
-  if(!pool.length)return [];
-  const out=[];
+  if(!pool.length||n<=0)return [];
+  let d=DECKS&&DECKS.get(pool);
+  if(!d){d={q:[]};if(DECKS)DECKS.set(pool,d);}
+  const r=DECKS?DECK_RNG:rng, out=[], used=new Set();
   while(out.length<n){
-    let batch=shuffle(pool,rng);
-    if(out.length&&batch.length>1&&batch[0].id===out[out.length-1].id){batch.push(batch.shift());}
-    out.push(...batch);
+    if(!d.q.length)d.q=shuffle(pool,r);
+    let idx=d.q.findIndex(f=>!used.has(keyOf(f)));
+    if(idx<0){
+      if(used.size<pool.length){d.q=d.q.concat(shuffle(pool,r));continue;}
+      used.clear();                                   // level smaller than the sheet: start another round
+      const prev=keyOf(out[out.length-1]);
+      idx=d.q.findIndex(f=>keyOf(f)!==prev); if(idx<0)idx=0;
+    }
+    const f=d.q.splice(idx,1)[0]; out.push(f); used.add(keyOf(f));
   }
-  return out.slice(0,n);
+  return out;
 }
 function interleave(main,extra){
   if(!extra.length)return main.slice();
@@ -342,23 +406,26 @@ function interleave(main,extra){
   return out;
 }
 function levelIndex(type,code){return TYPES[type].levels.findIndex(l=>l.code===code);}
+const REVIEW_CACHE=new Map();
 function reviewPool(type,level){
+  const ck=type+':'+level.code; if(REVIEW_CACHE.has(ck))return REVIEW_CACHE.get(ck);
   const levels=TYPES[type].levels, idx=levels.indexOf(level), ids=new Set(level.pool.map(f=>f.id)), seen=new Set(), out=[];
   for(let i=0;i<idx;i++){const l=levels[i];
+    if(l.group!==level.group)continue;
     if(!isWords(type)&&type!=='placement'&&l.range>level.range)continue;
     if(type==='placement')continue;
     for(const f of l.pool){if(!isWords(type)&&!nz(f))continue; if(!ids.has(f.id)&&!seen.has(f.id)){seen.add(f.id);out.push(f);}}}
-  return out;
+  REVIEW_CACHE.set(ck,out); return out;
 }
 function focusedItems(type,level,n,rng){
   if(level.families){
-    const fams=shuffle(level.families,rng), out=[]; let i=0;
-    while(out.length<n){out.push(...fams[i%fams.length]);i++;}
+    const out=[];
+    while(out.length<n)out.push(...drawFromPool(level.families,1,rng)[0]);
     return out.slice(0,n);
   }
   if(isWords(type)&&level.pool.length<n){
     const extra=drawFromPool(reviewPool(type,level),n-level.pool.length,rng);
-    return interleave(shuffle(level.pool,rng),extra);
+    return interleave(drawFromPool(level.pool,level.pool.length,rng),extra);
   }
   return drawFromPool(level.pool,n,rng);
 }
@@ -416,6 +483,10 @@ function itemText(it){
   return `${it.a} ${it.op==='-'?MINUS:'+'} ${it.b}`;
 }
 function buildSheets(s){
+  DECKS=new Map(); DECK_RNG=mulberry32(s.seed*2654435+97);
+  try{return buildSheetsInner(s);}finally{DECKS=null;DECK_RNG=null;}
+}
+function buildSheetsInner(s){
   const level=TYPES[s.type].levels.find(l=>l.code===s.level)||TYPES[s.type].levels[0];
   const n=itemsPerSheet(s), sheets=[];
   const dress=items=>items.map(it=>it.word?{...it,blanks:blanksFor(it.word,s.opts.blank||'auto',level.code,it.tag)}:it);
@@ -672,7 +743,7 @@ function pagesFor(s,sheets){
 const LAYOUT_DEFAULTS={
   numberline:{rows:9,scaffold:'none'},
   stacked:{style:'plain',rows:5,cols:4},
-  vowel:{rows:6,blank:'auto',case:'lower',hint:true,bw:false},
+  vowel:{rows:5,blank:'auto',case:'lower',hint:true,bw:false},
   match:{rows:6,case:'lower',bw:false},
   placement:{rows:8},
 };
